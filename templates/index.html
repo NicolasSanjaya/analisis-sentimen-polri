@@ -1,0 +1,20 @@
+<!-- templates/index.html -->
+{% extends "base.html" %} {% block content %}
+<div class="title-container">
+  <h1>ANALISIS SENTIMEN INSTITUSI POLRI</h1>
+</div>
+
+<div class="content-container">
+  <p class="lorem-text">
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eu molestie mi.
+    Nunc eu neque volutpat, efficitur nisi pulvinar, lobortis mi. Maecenas
+    laoreet augue mauris, et dapibus enim euismod ac. Nullam dignissim ipsum ac
+    libero consequat vestibulum. Mauris imperdiet tellus nec massa feugiat
+    sagittis. Vestibulum sagittis tellus risus, non condimentum.
+  </p>
+</div>
+
+<div class="button-container">
+  <a href="{{ url_for('kelola_data') }}" class="lanjutkan-btn">Lanjutkan</a>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!-- templates/hasil_klasifikasi.html -->
+{% extends "base.html" %} {% block content %}
+<div class="sidebar">
+  <h1 class="sidebar-title">
+    ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
+  </h1>
+  <div class="sidebar-menu">
+    <a href="{{ url_for('kelola_data') }}" class="menu-item">Kelola Data</a>
+    <a href="{{ url_for('processing') }}" class="menu-item">Processing</a>
+    <a href="{{ url_for('hasil_klasifikasi') }}" class="menu-item active"
+      >Hasil Klasifikasi</a
+    >
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="content-header">
+    <h2>Hasil Klasifikasi</h2>
+  </div>
+
+  <div class="content-text">
+    <p>Hasil klasifikasi sentimen data yang telah diproses.</p>
+  </div>
+
+  <div class="classification-results">
+    <div class="chart-container">
+      <h3>Distribusi Sentimen</h3>
+      <div class="chart">
+        <!-- Chart would be rendered here using JavaScript -->
+        <div class="placeholder-chart">
+          <div class="chart-bar positive" style="height: 150px">
+            <span class="label">Positif</span>
+            <span class="value">60%</span>
+          </div>
+          <div class="chart-bar neutral" style="height: 80px">
+            <span class="label">Netral</span>
+            <span class="value">30%</span>
+          </div>
+          <div class="chart-bar negative" style="height: 40px">
+            <span class="label">Negatif</span>
+            <span class="value">10%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-results">
+      <h3>Detail Klasifikasi</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Text</th>
+            <th>Sentimen</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Example text 1</td>
+            <td>Positif</td>
+            <td>0.85</td>
+          </tr>
+          <tr>
+            <td>Example text 2</td>
+            <td>Negatif</td>
+            <td>0.92</td>
+          </tr>
+          <!-- More rows would be dynamically added -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

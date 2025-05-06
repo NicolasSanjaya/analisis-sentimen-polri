@@ -1,0 +1,71 @@
+<!-- templates/processing.html -->
+{% extends "base.html" %} {% block content %}
+<div class="sidebar">
+  <h1 class="sidebar-title">
+    ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
+  </h1>
+  <div class="sidebar-menu">
+    <a href="{{ url_for('kelola_data') }}" class="menu-item">Kelola Data</a>
+    <a href="{{ url_for('processing') }}" class="menu-item active"
+      >Processing</a
+    >
+    <a href="{{ url_for('hasil_klasifikasi') }}" class="menu-item"
+      >Hasil Klasifikasi</a
+    >
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="content-header">
+    <h2>Processing</h2>
+  </div>
+
+  <div class="content-text">
+    <p>
+      Halaman ini menampilkan proses pengolahan data sentimen yang telah
+      diupload.
+    </p>
+  </div>
+
+  <div class="processing-section">
+    <h3>Text Processing</h3>
+    <!-- Processing form and options would go here -->
+    <div class="processing-options">
+      <div class="option">
+        <input type="checkbox" id="lowercase" checked />
+        <label for="lowercase">Case Folding (Lowercase)</label>
+      </div>
+      <div class="option">
+        <input type="checkbox" id="stopwords" checked />
+        <label for="stopwords">Stopword Removal</label>
+      </div>
+      <div class="option">
+        <input type="checkbox" id="stemming" checked />
+        <label for="stemming">Stemming</label>
+      </div>
+    </div>
+    <button class="process-btn">Proses Data</button>
+  </div>
+
+  <div class="processing-results">
+    <h3>Hasil Processing</h3>
+    <div class="result-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Text Asli</th>
+            <th>Text Hasil Processing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Text contoh asli...</td>
+            <td>text contoh hasil...</td>
+          </tr>
+          <!-- More rows would be dynamically added -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
