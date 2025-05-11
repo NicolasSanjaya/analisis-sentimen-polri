@@ -6,12 +6,7 @@ import math
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, classification_report
-import re
-import nltk
-import pickle
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
@@ -20,6 +15,14 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import joblib
 from livereload import Server
+import matplotlib.pyplot as plt
+import seaborn as sns
+from wordcloud import WordCloud, STOPWORDS
+import base64
+from io import BytesIO
+from collections import Counter
+import re
+import nltk
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for flashing messages
@@ -49,59 +52,189 @@ hasil = None
 preview_data = None
 data_review = None
 
-# def load_model(model_path):
-#     global model, vectorizer
-#     try:
-#         with open(model_path, 'rb') as f:
-#             model = pickle.load(f)
-        
-#         # Check if vectorizer is part of the model file
-#         if isinstance(model, tuple) and len(model) == 2:
-#             model, vectorizer = model
-#         return True
-#     except Exception as e:
-#         print(f"Error loading model: {e}")
-#         return False
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('stopwords')
 
-# model = load_model('models/adaboost.pkl')
-# Download NLTK resources
-@app.before_request
-def download_nltk_resources():
-    try:
-        nltk.data.find('tokenizers/punkt')
-    except LookupError:
-        nltk.download('punkt')
+# @app.before_request
+# def download_nltk_resources():
+#     try:
+#         nltk.data.find('tokenizers/punkt')
+#     except LookupError:
+#         nltk.download('punkt')
     
-    try:
-        nltk.data.find('corpora/stopwords')
-    except LookupError:
-        nltk.download('stopwords')
+#     try:
+#         nltk.data.find('corpora/stopwords')
+#     except LookupError:
+#         nltk.download('stopwords')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def processing_data(df, text_column, label_column):
-    
-    
-    
-    
-    # Step 4: Transform text data to numerical features
-    X = vectorizer.transform(df['full_text'])
+def processing_data(df):
+    # Preprocessing
+    df = df.dropna(subset='full_text')
+    df = df.drop_duplicates()
 
-    # Step 5: Predict sentiments
-    sentiments = model.predict(X)
+    # 1. Mengambil kolom yang dibutuhkan
+    df['full_text'] = df['full_text']
 
-    # Step 6: Map numerical predictions to sentiment labels
-    # Assuming: 0 = negative, 1 = neutral, 2 = positive
-    sentiment_map = {0: 'negative', 1: 'neutral', 2: 'positive'}
-    df['sentiment'] = [sentiment_map.get(s, 'neutral') for s in sentiments]
+    print(df.head())
 
-    # Step 7: Save the results
-    df.to_csv('polri1_with_sentiment.csv', index=False)
+    # 2. Case folding - mengubah teks menjadi lowercase
+    df['full_text'] = df['full_text'].str.lower()
+
+    # 3. Cleaning - menghapus URL, mention, hashtag, dan karakter non alfanumerik
+    def clean_text(text):
+        # Menghapus URL
+        text = re.sub(r'https?://\S+|www\.\S+', '', text)
+        # Menghapus mention
+        text = re.sub(r'@\w+', '', text)
+        # Menghapus hashtag
+        text = re.sub(r'#\w+', '', text)
+        # Menghapus RT dan FAV
+        text = re.sub(r'\brt\b', '', text)
+        # Menghapus karakter non alfanumerik kecuali spasi
+        text = re.sub(r'[^\w\s]', '', text)
+        # Menghapus angka
+        text = re.sub(r'\d+', '', text)
+        # Menghapus spasi berlebih
+        text = re.sub(r'\s+', ' ', text).strip()
+        # Mengganti &amp dengan kata dan
+        text = text.replace('amp', 'dan')
+        return text
+
+    df['full_text'] = df['full_text'].apply(clean_text)
+
+    # 4. Tokenizing
+    df['stemmed_text'] = df['full_text'].apply(word_tokenize)
+
+    # 5. Stopword removal
+    factory = StopWordRemoverFactory()
+    stopwords_id = factory.get_stop_words()
+    additional_stopwords = [
+        # Singkatan umum
+        'yg', 'dgn', 'nya', 'utk', 'dlm', 'bkn', 'tdk', 'org', 'krn', 'jg', 'sdh', 'spy', 'trs', 'tsb',
+        'skrg', 'sih', 'gak', 'ga', 'tuh', 'spt', 'bgs', 'tp', 'klo', 'kl', 'dr', 'pd', 'sm', 'bwt',
+        'kmrn', 'sy', 'lg', 'gue', 'gw', 'aja', 'deh', 'sih', 'jd', 'bs', 'bisa', 'kok', 'kyk', 'ni',
+        'yah', 'sih', 'gt', 'loh', 'bgt', 'udh', 'dpt', 'udah', 'nih', 'gini', 'gitu', 'gmn', 'thd', 'sgt',
+
+        # Kata kerja umum
+        'adalah', 'merupakan', 'menjadi', 'memiliki', 'terdapat', 'menurut', 'memang', 'seperti',
+
+        # Kata hubung
+        'dan', 'atau', 'tetapi', 'namun', 'serta', 'karena', 'sebab', 'jika', 'apabila', 'maka',
+        'sehingga', 'agar', 'supaya', 'ketika', 'selama', 'sebelum', 'sesudah', 'sejak', 'sampai',
+        'hingga', 'meskipun', 'walaupun', 'seolah', 'andai', 'kendati', 'seandainya', 'kalau',
+
+        # Kata ganti dan petunjuk
+        'saya', 'aku', 'kamu', 'kau', 'anda', 'dia', 'ia', 'mereka', 'kami', 'kita', 'beliau',
+        'ini', 'itu', 'tersebut', 'begini', 'begitu', 'demikian',
+
+        # Kata depan
+        'di', 'ke', 'dari', 'pada', 'kepada', 'oleh', 'untuk', 'bagi', 'tentang', 'dengan', 'dalam',
+        'antara', 'terhadap', 'akan', 'mengenai',
+
+        # Kata keterangan
+        'sangat', 'amat', 'terlalu', 'sekali', 'banget', 'sungguh', 'cukup', 'agak', 'hampir', 'hanya',
+        'saja', 'pun', 'lagi', 'juga', 'sedang', 'masih', 'telah', 'sudah', 'belum', 'pernah',
+        'selalu', 'sering', 'jarang', 'kadang', 'mungkin', 'barangkali', 'tentu', 'pasti',
+
+        # Kata bilangan
+        'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh',
+        'sebelas', 'dua belas', 'puluh', 'ratus', 'ribu', 'juta', 'pertama', 'kedua', 'ketiga',
+        'keempat', 'kelima', 'beberapa', 'sebagian', 'semua', 'seluruh', 'banyak', 'sedikit',
+
+        # Kata tanya
+        'apa', 'siapa', 'kapan', 'bila', 'bilamana', 'dimana', 'kemana', 'bagaimana', 'mengapa',
+        'kenapa', 'berapa', 'mana',
+
+        # Lainnya
+        'ya', 'tidak', 'bukan', 'belum', 'sudah', 'mari', 'ayo', 'silakan', 'tolong'
+    ]
+
+    stopwords_id.extend(additional_stopwords)
+
+    def remove_stopwords(tokens):
+        return [word for word in tokens if word not in stopwords_id and len(word) > 2]
+
+    df['stemmed_text'] = df['stemmed_text'].apply(remove_stopwords)
+
+    # 6. Stemming
+    factory = StemmerFactory()
+    stemmer = factory.create_stemmer()
+
+    def stem_tokens(tokens):
+        return [stemmer.stem(token) for token in tokens]
+
+    df['stemmed_text'] = df['stemmed_text'].apply(stem_tokens)
+    df['stemmed_text'] = df['stemmed_text'].apply(lambda x: ' '.join(x))
+    df.to_csv('data.csv', index=False)
+    return df
+
+
+# Generate charts as base64 images
+def create_bar_chart(sentiment_counts):
+    plt.figure(figsize=(10, 6))
+    sns.set_style("whitegrid")
+    categories = list(sentiment_counts.keys())
+    values = list(sentiment_counts.values())
     
-
+    # Define colors based on sentiment
+    color_map = {'positive': '#4CAF50', 'neutral': '#FFC107', 'negative': '#F44336'}
+    colors = [color_map.get(cat, '#2196F3') for cat in categories]
     
-    return "Success"
+    ax = sns.barplot(x=categories, y=values, palette=colors)
+    plt.title('Distribusi Sentimen', fontsize=16)
+    plt.xlabel('Kategori Sentimen', fontsize=12)
+    plt.ylabel('Jumlah', fontsize=12)
+    
+    # Add value labels on top of bars
+    for i, v in enumerate(values):
+        ax.text(i, v + 0.5, str(v), ha='center', fontsize=12)
+    
+    buf = BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
+
+def create_pie_chart(sentiment_counts):
+    plt.figure(figsize=(8, 8))
+    categories = list(sentiment_counts.keys())
+    values = list(sentiment_counts.values())
+    
+    # Define colors based on sentiment
+    color_map = {'positive': '#4CAF50', 'neutral': '#FFC107', 'negative': '#F44336'}
+    colors = [color_map.get(cat, '#2196F3') for cat in categories]
+    
+    plt.pie(values, labels=categories, colors=colors, autopct='%1.1f%%', startangle=90, shadow=True)
+    plt.title('Proporsi Sentimen', fontsize=16)
+    
+    buf = BytesIO()
+    plt.tight_layout()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
+
+def create_wordcloud(text):
+    wordcloud = WordCloud(width=800, height=400, 
+                         background_color='white',
+                         max_words=100, 
+                         colormap='viridis').generate(text)
+    
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.tight_layout()
+    
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    plt.close()
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 @app.route('/')
 def index():
@@ -241,17 +374,24 @@ def processing():
 def process_data():
     global X_train, X_test, y_train, y_test, accuracy, training_result, testing_result, classification_results, vectorizer, hasil, data_review, preview_data
     data = pd.read_csv(session['uploaded_file'])
+    # data = pd.read_csv('data.csv')
+
+    # Preprocess the data
+    data = processing_data(data)
+
+    print(data.head())
 
     for i in range(len(data)):
         # Vectorize the text
-        text_vec = vectorizer.transform([data['full_text'][i]])
-            
+        text_vec = vectorizer.transform([data['stemmed_text'][i]])
+        
         # Make prediction
         prediction = model.predict(text_vec)[0]
         data.loc[i, 'sentiment'] = prediction
         
-
-    data = data[['full_text', 'sentiment']]
+    print(data.head())
+    
+    data = data[['full_text', 'stemmed_text', 'sentiment']]
     X = data['full_text']
     y = data['sentiment']
 
@@ -280,7 +420,33 @@ def process_data():
 
 @app.route('/hasil_klasifikasi')
 def hasil_klasifikasi():
-    return render_template('hasil_klasifikasi.html')
+    df = pd.read_csv('hasilweb.csv')
+    
+    # Generate charts
+    # Wordcloud
+    wordcloud_img = create_wordcloud(' '.join(df['full_text']))
+    sentiment_counts = df['sentiment'].value_counts().to_dict()
+    accuracies = {
+        'training_accuracy': training_result['accuracy'],
+        'testing_accuracy': testing_result['accuracy'],
+        'classification_report': classification_results['report'],
+        'confusion_matrix': classification_results['confusion_matrix']
+    }
+    examples = {
+        'positive': df[df['sentiment'] == 'positive'].sample(5).to_dict(orient='records'),
+        'neutral': df[df['sentiment'] == 'neutral'].sample(5).to_dict(orient='records'),
+        'negative': df[df['sentiment'] == 'negative'].sample(5).to_dict(orient='records')
+    }
+
+    bar_chart = create_bar_chart(sentiment_counts)
+    pie_chart = create_pie_chart(sentiment_counts)
+    
+    return render_template('hasil_klasifikasi.html',
+                          accuracies=accuracies,
+                          examples=examples,
+                          bar_chart=bar_chart,
+                          pie_chart=pie_chart,
+                          wordcloud=wordcloud_img)
 
 @app.route('/uji_coba', methods=['GET', 'POST'])
 def uji_coba():

@@ -20,55 +20,42 @@
   </div>
 
   <div class="content-text">
-    <p>Hasil klasifikasi sentimen data yang telah diproses.</p>
+    <p>
+      Hasil analisis sentimen terhadap institusi POLRI berdasarkan data yang
+      telah dikumpulkan dari media sosial. Klasifikasi menggunakan berbagai
+      metode machine learning untuk membandingkan akurasi.
+    </p>
+  </div>
+
+  <div class="results-container">
+    <h3 style="text-align: center">Classification Result</h3>
+    <div class="model-result">
+      Data Testing Result : {{ accuracies.data_testing }}%
+    </div>
+    <div class="model-result">
+      Naive Bayes Result : {{ accuracies.naive_bayes }}%
+    </div>
+    <div class="model-result">
+      Naive Bayes + AdaBoost Result : {{ accuracies.naive_bayes_adaboost }}%
+    </div>
   </div>
 
   <div class="classification-results">
     <div class="chart-container">
       <h3>Distribusi Sentimen</h3>
       <div class="chart">
-        <!-- Chart would be rendered here using JavaScript -->
-        <div class="placeholder-chart">
-          <div class="chart-bar positive" style="height: 150px">
-            <span class="label">Positif</span>
-            <span class="value">60%</span>
-          </div>
-          <div class="chart-bar neutral" style="height: 80px">
-            <span class="label">Netral</span>
-            <span class="value">30%</span>
-          </div>
-          <div class="chart-bar negative" style="height: 40px">
-            <span class="label">Negatif</span>
-            <span class="value">10%</span>
-          </div>
-        </div>
+        <h3 style="text-align: center">Distribusi Sentimen</h3>
+        <img src="data:image/png;base64,{{ bar_chart }}" alt="Bar Chart" />
+      </div>
+      <div class="chart">
+        <h3 style="text-align: center">Proporsi Sentimen</h3>
+        <img src="data:image/png;base64,{{ pie_chart }}" alt="Pie Chart" />
       </div>
     </div>
 
-    <div class="table-results">
-      <h3>Detail Klasifikasi</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Text</th>
-            <th>Sentimen</th>
-            <th>Confidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Example text 1</td>
-            <td>Positif</td>
-            <td>0.85</td>
-          </tr>
-          <tr>
-            <td>Example text 2</td>
-            <td>Negatif</td>
-            <td>0.92</td>
-          </tr>
-          <!-- More rows would be dynamically added -->
-        </tbody>
-      </table>
+    <div class="wordcloud-container">
+      <h3>Word Cloud Analisis Sentimen</h3>
+      <img src="data:image/png;base64,{{ wordcloud }}" alt="Word Cloud" />
     </div>
   </div>
 </div>
