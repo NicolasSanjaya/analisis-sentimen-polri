@@ -1,0 +1,60 @@
+<!-- templates/uji_coba.html -->
+{% extends 'base.html' %} {% block content %}
+<div class="sidebar">
+  <h1 class="sidebar-title">
+    ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
+  </h1>
+  <div class="sidebar-menu">
+    <a href="{{ url_for('kelola_data') }}" class="menu-item">Kelola Data</a>
+    <a href="{{ url_for('processing') }}" class="menu-item">Processing</a>
+    <a href="{{ url_for('hasil_klasifikasi') }}" class="menu-item"
+      >Hasil Klasifikasi</a
+    >
+    <a href="{{ url_for('uji_coba') }}" class="menu-item active">Uji Coba</a>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="content-header">
+    <h2>Uji Coba</h2>
+  </div>
+  <div class="content-text">
+    <p class="text-center">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eu molestie
+      mi. Nunc eu neque volutpat, efficitur nisi pulvinar, lobortis mi. Maecenas
+      laoreet augue mauris, et dapibus enim euismod ac. Nullam dignissim ipsum
+      ac libero consequat vestibulum. Mauris imperdiet tellus nec massa feugiat
+      sagittis. Vestibulum sagittis tellus risus, non condimentum.
+    </p>
+  </div>
+
+  <div class="test-form-section">
+    <form action="{{ url_for('uji_coba') }}" method="post">
+      <div class="form-group">
+        <label for="text">Silahkan Masukkan Kalimat : </label>
+        <input
+          type="text"
+          id="text"
+          name="text"
+          required
+          value="{{ text if text }}"
+        />
+      </div>
+      <button type="submit">Analisis</button>
+    </form>
+
+    {% if result %}
+    <div class="test-result">
+      <h2>Hasil Analisis</h2>
+      <p class="text-center">
+        Kalimat yang dimasukkan: <strong>{{ text }}</strong>
+      </p>
+      <div class="result-box">
+        <h3>Hasil :</h3>
+        <p class="text-result-text">{{ result }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

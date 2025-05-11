@@ -18,12 +18,29 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Process button functionality
-  const processBtn = document.querySelector(".process-btn");
-  if (processBtn) {
-    processBtn.addEventListener("click", function () {
-      // In a real application, this would submit the processing options
-      // For now, just show an alert
-      alert("Processing will be performed with the selected options.");
-    });
-  }
+  // const processBtn = document.querySelector(".process-btn");
+  // if (processBtn) {
+  //   processBtn.addEventListener("click", function () {
+  //     fetch("/process_data")
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         if (data.error) {
+  //           console.log("Error:", data.error);
+  //           alert(data.error);
+  //         } else {
+  //           console.log("Processing complete:", data);
+  //           document.getElementById("training-accuracy").textContent =
+  //             data.training_accuracy.toFixed(2) + "%";
+  //           document.getElementById("testing-accuracy").textContent =
+  //             data.testing_accuracy.toFixed(2) + "%";
+
+  //           // Redirect to results page after processing
+  //           window.location.href = "/hasil_klasifikasi";
+  //         }
+  //       })
+  //       .catch(() => {
+  //         alert("An error occurred during processing.");
+  //       });
+  //   });
+  // }
 });
