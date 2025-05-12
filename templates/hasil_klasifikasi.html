@@ -30,14 +30,10 @@
   <div class="results-container">
     <h3 style="text-align: center">Classification Result</h3>
     <div class="model-result">
-      Data Testing Result : {{ accuracies.data_testing }}%
+      <h3>Data Testing Result :</h3>
+      <p>{{ accuracy }}%</p>
     </div>
-    <div class="model-result">
-      Naive Bayes Result : {{ accuracies.naive_bayes }}%
-    </div>
-    <div class="model-result">
-      Naive Bayes + AdaBoost Result : {{ accuracies.naive_bayes_adaboost }}%
-    </div>
+    {% if preview_data %} {{ report|safe }} {% endif %}
   </div>
 
   <div class="classification-results">

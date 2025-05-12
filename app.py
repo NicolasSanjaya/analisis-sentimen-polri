@@ -37,6 +37,7 @@ ROWS_PER_PAGE = 10  # Number of rows to display per page
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Global variables to store data and model
+naivebayes = joblib.load('models/naivebayes.pkl')
 model = joblib.load('models/adaboost.pkl')
 vectorizer = joblib.load('models/vectorizer.pkl')
 df = None
@@ -74,10 +75,11 @@ def allowed_file(filename):
 def processing_data(df):
     # Preprocessing
     df = df.dropna(subset='full_text')
-    df = df.drop_duplicates()
+    df = df.drop_duplicates(subset='full_text')
 
     # 1. Mengambil kolom yang dibutuhkan
-    df['full_text'] = df['full_text']
+    dropcolumns = ['conversation_id_str', 'created_at', 'favorite_count', 'id_str', 'image_url', 'in_reply_to_screen_name', 'lang', 'location', 'quote_count', 'reply_count', 'retweet_count', 'tweet_url', 'user_id_str', 'username']
+    df.drop(columns=dropcolumns, inplace=True)
 
     print(df.head())
 
@@ -367,19 +369,18 @@ def processing():
 
     
     return render_template('processing.html', preview_data=preview_data, training_result=training_result,
-                           testing_result=testing_result,
-                           classification_results=classification_results, hasil=hasil, current_page=current_page, total_pages=total_pages, total_rows=total_rows, total_columns=total_columns)
+                           testing_result=testing_result, hasil=hasil, current_page=current_page, total_pages=total_pages, total_rows=total_rows, total_columns=total_columns)
 
 @app.route('/process_data', methods=['POST'])
 def process_data():
     global X_train, X_test, y_train, y_test, accuracy, training_result, testing_result, classification_results, vectorizer, hasil, data_review, preview_data
-    data = pd.read_csv(session['uploaded_file'])
-    # data = pd.read_csv('data.csv')
+    # data = pd.read_csv(session['uploaded_file'])
 
     # Preprocess the data
-    data = processing_data(data)
+    # data = processing_data(data)
 
-    print(data.head())
+    # Sementara untuk testing (data yang sudah dipreprocessing)
+    data = pd.read_csv('hasilweb.csv')
 
     for i in range(len(data)):
         # Vectorize the text
@@ -390,17 +391,27 @@ def process_data():
         data.loc[i, 'sentiment'] = prediction
         
     print(data.head())
-    
-    data = data[['full_text', 'stemmed_text', 'sentiment']]
-    X = data['full_text']
+    X = data['stemmed_text']
     y = data['sentiment']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+    # data = data[['full_text', 'stemmed_text', 'sentiment']]
+    # X_test = data['full_text']
+    # y_test = data['sentiment']
+
+    y_pred = model.predict(vectorizer.transform(X_test))
 
     # Calculate metrics
-    accuracy = accuracy_score(X, y)
-    report = classification_report(X, y, output_dict=True)
-    conf_matrix = confusion_matrix(X, y)
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, output_dict=True)
+    conf_matrix = confusion_matrix(y_test, y_pred)
+
+    print('accuracy:', accuracy)
+    print('classification_result:', report)
+    print('confusion_matrix:', conf_matrix)
+
+    report = pd.DataFrame(report)
 
     classification_results = {
         'accuracy': accuracy * 100,
@@ -426,12 +437,6 @@ def hasil_klasifikasi():
     # Wordcloud
     wordcloud_img = create_wordcloud(' '.join(df['full_text']))
     sentiment_counts = df['sentiment'].value_counts().to_dict()
-    accuracies = {
-        'training_accuracy': training_result['accuracy'],
-        'testing_accuracy': testing_result['accuracy'],
-        'classification_report': classification_results['report'],
-        'confusion_matrix': classification_results['confusion_matrix']
-    }
     examples = {
         'positive': df[df['sentiment'] == 'positive'].sample(5).to_dict(orient='records'),
         'neutral': df[df['sentiment'] == 'neutral'].sample(5).to_dict(orient='records'),
@@ -440,13 +445,15 @@ def hasil_klasifikasi():
 
     bar_chart = create_bar_chart(sentiment_counts)
     pie_chart = create_pie_chart(sentiment_counts)
+
+    print("report", classification_results['report'])
     
     return render_template('hasil_klasifikasi.html',
-                          accuracies=accuracies,
                           examples=examples,
                           bar_chart=bar_chart,
                           pie_chart=pie_chart,
-                          wordcloud=wordcloud_img)
+                          wordcloud=wordcloud_img, accuracy=classification_results['accuracy'],report=classification_results['report'].to_dict('records'),
+                          confusion_matrix=classification_results['confusion_matrix'])
 
 @app.route('/uji_coba', methods=['GET', 'POST'])
 def uji_coba():
