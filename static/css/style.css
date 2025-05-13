@@ -203,6 +203,10 @@ body {
   margin-bottom: 30px;
 }
 
+.processing-header {
+  margin-bottom: 15px;
+}
+
 .processing-section h3 {
   margin-bottom: 15px;
 }
@@ -267,12 +271,19 @@ body {
 
 /* Classification results styles */
 .classification-results {
+  margin-top: 20px;
   background-color: #fff;
   padding: 20px;
   border-radius: 4px;
 }
 
 .chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  justify-content: center;
+  gap: 30px;
   margin-bottom: 30px;
 }
 
@@ -443,6 +454,12 @@ body {
 .preview-section {
   margin-top: 30px;
   overflow-x: auto; /* Allow horizontal scrolling if table is wide */
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .flashes p {

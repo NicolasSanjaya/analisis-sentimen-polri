@@ -24,26 +24,26 @@
   <div class="content-text">
     <p>
       Halaman ini menampilkan proses pengolahan data sentimen yang telah
-      diupload.
+      diupload. Data yang telah diupload akan diproses untuk mendapatkan hasil
+      analisis sentimen. Proses ini meliputi beberapa tahap, seperti
+      <strong>case folding</strong>, <strong>cleaning data</strong>,
+      <strong>tokenisasi</strong>, <strong>stopword removal</strong>,
+      <strong>stemming</strong> kemudian model akan melakukan klasifikasi
+      sentiment dan akan menghasilkan kolom full_text sebagai text asli yang
+      telah diproses hanya sebatas case folding dan cleaning kemudian kolom
+      stemmed_text yang merupakan hasil dari proses tokenisasi, stopword
+      removal, dan stemming. Setelah itu, data akan disimpan ke dalam file yang
+      sudah otomatis terdownload dan tersimpan untuk digunakan dalam analisis
+      sentimen lebih lanjut. Setelah proses ini selesai, Anda dapat melanjutkan
+      ke halaman Hasil Klasifikasi untuk melihat hasil analisis sentimen.
     </p>
   </div>
 
   <div class="processing-section">
-    <h3>Text Processing</h3>
-    <!-- Processing form and options would go here -->
-    <div class="processing-options">
-      <div class="option">
-        <input type="checkbox" id="lowercase" checked />
-        <label for="lowercase">Case Folding (Lowercase)</label>
-      </div>
-      <div class="option">
-        <input type="checkbox" id="stopwords" checked />
-        <label for="stopwords">Stopword Removal</label>
-      </div>
-      <div class="option">
-        <input type="checkbox" id="stemming" checked />
-        <label for="stemming">Stemming</label>
-      </div>
+    <div class="processing-header">
+      <h3>Text Processing</h3>
+      <p>Tahap yang akan dilakukan adalah</p>
+      <p>Case Folding, Cleaning Data, Tokenisasi, Stopword Removal, Stemming</p>
     </div>
     <form action="{{ url_for('process_data') }}" method="post">
       <button class="process-btn" type="submit">Proses Data</button>
@@ -51,7 +51,14 @@
   </div>
 
   <div class="preview-section">
-    <h3>Data Preview</h3>
+    <div class="preview-header">
+      <h3>Data Preview</h3>
+      {% if hasil == True %}
+      <form action="{{ url_for('download') }}" method="post">
+        <button class="process-btn" type="submit">Download Excel</button>
+      </form>
+      {% endif %}
+    </div>
 
     {% if total_rows > 0 %}
     <div class="data-info">

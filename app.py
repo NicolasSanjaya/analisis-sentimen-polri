@@ -1,13 +1,11 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 import pandas as pd
 from werkzeug.utils import secure_filename
 import math
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
-from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
@@ -46,6 +44,7 @@ X_test = None
 y_train = None
 y_test = None
 accuracy = None
+report = None
 training_result = None
 testing_result = None
 classification_results = None
@@ -171,8 +170,11 @@ def processing_data(df):
 
     df['stemmed_text'] = df['stemmed_text'].apply(stem_tokens)
     df['stemmed_text'] = df['stemmed_text'].apply(lambda x: ' '.join(x))
+
     df.to_csv('data.csv', index=False)
+    
     return df
+
 
 
 # Generate charts as base64 images
@@ -200,6 +202,12 @@ def create_bar_chart(sentiment_counts):
     plt.savefig(buf, format='png')
     buf.seek(0)
     plt.close()
+
+    # Simpan Gambar
+    plt.savefig(buf, format='png')
+    send_file(buf, mimetype='image/png', 
+                    download_name='barchart.png', as_attachment=True)
+
     return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 def create_pie_chart(sentiment_counts):
@@ -219,9 +227,16 @@ def create_pie_chart(sentiment_counts):
     plt.savefig(buf, format='png')
     buf.seek(0)
     plt.close()
+
+    # Simpan Gambar
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    send_file(buf, mimetype='image/png', 
+                    download_name='piechart.png', as_attachment=True)
+
     return base64.b64encode(buf.getvalue()).decode('utf-8')
 
-def create_wordcloud(text):
+def create_wordcloud(text, sentiment=None):
     wordcloud = WordCloud(width=800, height=400, 
                          background_color='white',
                          max_words=100, 
@@ -236,11 +251,37 @@ def create_wordcloud(text):
     plt.savefig(buf, format='png')
     buf.seek(0)
     plt.close()
+
+    # sentiment = sentiment if sentiment else 'all'
+
+    # Simpan Gambar
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    send_file(buf, mimetype='image/png', 
+                    download_name='wordcloud_{sentiment}.png', as_attachment=True)
+
     return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/download', methods=['GET', 'POST'])
+def download():
+    try:
+        # Read the CSV file
+        df = pd.read_csv('hasilweb.csv')
+
+        # Save the DataFrame to an Excel file
+        output_file = 'hasil.xlsx'
+        df.to_excel(output_file, index=False)
+
+        # Send the file for download
+        return send_file(output_file, as_attachment=True, download_name='hasil.xlsx')
+        
+    except Exception as e:
+        flash(f'Error generating Excel file: {str(e)}')
+        return redirect(url_for('processing'))   
 
 @app.route('/kelola_data', methods=['GET', 'POST'])
 def kelola_data():
@@ -316,12 +357,15 @@ def kelola_data():
 
 @app.route('/processing')
 def processing():
-    global preview_data
+    global preview_data, hasil
     preview_data = None
     total_rows = 0
     total_columns = 0
     current_page = request.args.get('page', 1, type=int)
     total_pages = 1
+
+    if(os.path.exists("hasilweb.csv")):
+        hasil = True
 
     # Check if a file has been uploaded in this session
     if 'uploaded_file' in session:
@@ -347,11 +391,10 @@ def processing():
         except Exception as e:
             flash(f'Error reading CSV: {str(e)}')
 
+    if data_review is not None or os.path.exists("hasilweb.csv"):
+        df = pd.read_csv("hasilweb.csv")
 
-    if data_review is not None:
-        data = pd.read_csv("hasilweb.csv")
-
-        total_rows, total_columns = data.shape
+        total_rows, total_columns = df.shape
         total_pages = math.ceil(total_rows / ROWS_PER_PAGE)
             
         # Make sure current page is valid
@@ -365,7 +408,7 @@ def processing():
         end_idx = min(start_idx + ROWS_PER_PAGE, total_rows)
             
         # Get slice of dataframe for current page
-        preview_data = data.iloc[start_idx:end_idx].to_html(classes='table table-striped')
+        preview_data = df.iloc[start_idx:end_idx].to_html(classes='table table-striped')
 
     
     return render_template('processing.html', preview_data=preview_data, training_result=training_result,
@@ -374,13 +417,24 @@ def processing():
 @app.route('/process_data', methods=['POST'])
 def process_data():
     global X_train, X_test, y_train, y_test, accuracy, training_result, testing_result, classification_results, vectorizer, hasil, data_review, preview_data
-    # data = pd.read_csv(session['uploaded_file'])
+    
+    # Menghapus File Yang Sudah Ada
+    # File kolom full_text dan stemmed_text
+    if(os.path.exists("data.csv")):
+        os.remove("data.csv")
+    # File kolom full_text, stemmed_text, dan sentiment
+    if(os.path.exists("hasilweb.csv")):
+        os.remove("hasilweb.csv")
 
+    data = pd.read_csv(session['uploaded_file'])
     # Preprocess the data
-    # data = processing_data(data)
+    data = processing_data(data)
 
-    # Sementara untuk testing (data yang sudah dipreprocessing)
-    data = pd.read_csv('hasilweb.csv')
+    # Data yang belum ada kolom sentiment
+    data = pd.read_csv("data.csv")
+
+    # Sementara untuk testing (data yang sudah dipreprocessing) yang sudah ada kolom sentiment
+    # data = pd.read_csv('hasilweb.csv')
 
     for i in range(len(data)):
         # Vectorize the text
@@ -393,6 +447,8 @@ def process_data():
     print(data.head())
     X = data['stemmed_text']
     y = data['sentiment']
+
+    print("data setelah diberi sentimen\n", data)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     
@@ -431,29 +487,31 @@ def process_data():
 
 @app.route('/hasil_klasifikasi')
 def hasil_klasifikasi():
-    df = pd.read_csv('hasilweb.csv')
+
+    if(os.path.exists("hasilweb.csv")):
+        df = pd.read_csv('hasilweb.csv')
+    else:
+        flash('No classification results available. Please process the data first.')
+        return render_template('hasil_klasifikasi.html')
     
     # Generate charts
     # Wordcloud
-    wordcloud_img = create_wordcloud(' '.join(df['full_text']))
+    # Untuk 1 Dokumen
+    wordcloud_img = create_wordcloud(' '.join(df['stemmed_text']), 'all')
+    wordcloud_img_neutral = create_wordcloud(' '.join(df[df['sentiment'] == 'neutral']['stemmed_text']), 'netral')
+    wordcloud_img_positive = create_wordcloud(' '.join(df[df['sentiment'] == 'positive']['stemmed_text']), 'positif')
+    wordcloud_img_negative = create_wordcloud(' '.join(df[df['sentiment'] == 'negative']['stemmed_text']), 'negatif')
+
     sentiment_counts = df['sentiment'].value_counts().to_dict()
-    examples = {
-        'positive': df[df['sentiment'] == 'positive'].sample(5).to_dict(orient='records'),
-        'neutral': df[df['sentiment'] == 'neutral'].sample(5).to_dict(orient='records'),
-        'negative': df[df['sentiment'] == 'negative'].sample(5).to_dict(orient='records')
-    }
 
     bar_chart = create_bar_chart(sentiment_counts)
     pie_chart = create_pie_chart(sentiment_counts)
-
-    print("report", classification_results['report'])
     
     return render_template('hasil_klasifikasi.html',
-                          examples=examples,
                           bar_chart=bar_chart,
                           pie_chart=pie_chart,
-                          wordcloud=wordcloud_img, accuracy=classification_results['accuracy'],report=classification_results['report'].to_dict('records'),
-                          confusion_matrix=classification_results['confusion_matrix'])
+                          wordcloud=wordcloud_img, wordcloud_neutral=wordcloud_img_neutral,
+                          wordcloud_positive=wordcloud_img_positive, wordcloud_negative=wordcloud_img_negative,)
 
 @app.route('/uji_coba', methods=['GET', 'POST'])
 def uji_coba():
@@ -478,8 +536,4 @@ def uji_coba():
 if __name__ == '__main__':
     server = Server(app.wsgi_app)
 
-    # Watch for changes in the templates and static files
-    server.watch('templates/')
-    server.watch('static/')
-    server.serve(port=5000, host='0.0.0.0', debug=True)
-    # app.run(debug=True)
+    app.run(debug=True)
