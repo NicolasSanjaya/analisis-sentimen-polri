@@ -1,5 +1,14 @@
 <!-- templates/processing.html -->
 {% extends "base.html" %} {% block content %}
+
+<!-- Spinner Loading -->
+<div id="loading-overlay" style="display: none">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Sedang memproses data...</p>
+  </div>
+</div>
+
 <div class="sidebar">
   <h1 class="sidebar-title">
     ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
@@ -42,9 +51,19 @@
   <div class="processing-section">
     <div class="processing-header">
       <h3>Text Processing</h3>
+      <p class="upload-note">
+        *harus ada kolom yang bernama full_text pada file .csv
+      </p>
       <p>Tahap yang akan dilakukan adalah</p>
       <p>Case Folding, Cleaning Data, Tokenisasi, Stopword Removal, Stemming</p>
     </div>
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <div class="flashes">
+      {% for message in messages %}
+      <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
     <form action="{{ url_for('process_data') }}" method="post">
       <button class="process-btn" type="submit">Proses Data</button>
     </form>
@@ -54,9 +73,14 @@
     <div class="preview-header">
       <h3>Data Preview</h3>
       {% if hasil == True %}
-      <form action="{{ url_for('download') }}" method="post">
-        <button class="process-btn" type="submit">Download Excel</button>
-      </form>
+      <div class="download-buttons">
+        <a class="process-btn" href="{{ url_for('download_excel') }}"
+          >Download Excel</a
+        >
+        <a class="process-btn" href="{{ url_for('download_csv') }}"
+          >Download CSV</a
+        >
+      </div>
       {% endif %}
     </div>
 

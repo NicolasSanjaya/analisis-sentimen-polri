@@ -1,5 +1,14 @@
 <!-- templates/hasil_klasifikasi.html -->
 {% extends "base.html" %} {% block content %}
+
+<!-- Spinner Loading -->
+<div id="loading-overlay" style="display: none">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Sedang memproses data...</p>
+  </div>
+</div>
+
 <div class="sidebar">
   <h1 class="sidebar-title">
     ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
@@ -45,31 +54,66 @@
       <div class="chart">
         <h3 style="text-align: center">Distribusi Sentimen</h3>
         <img src="data:image/png;base64,{{ bar_chart }}" alt="Bar Chart" />
+        <a class="process-btn" href="{{ url_for('download_bar_chart') }}"
+          >Download Bar Chart</a
+        >
       </div>
       <div class="chart">
         <h3 style="text-align: center">Proporsi Sentimen</h3>
         <img src="data:image/png;base64,{{ pie_chart }}" alt="Pie Chart" />
+        <a class="process-btn" href="{{ url_for('download_pie_chart') }}"
+          >Download Pie Chart</a
+        >
       </div>
     </div>
 
     <div class="chart-container">
-      <h3>Word Cloud Dari Keseluruhan Data / Isi File CSV</h3>
-      <img src="data:image/png;base64,{{ wordcloud }}" alt="Word Cloud" />
-      <h3>Word Cloud Untuk Sentimen Netral</h3>
-      <img
-        src="data:image/png;base64,{{ wordcloud_neutral }}"
-        alt="Word Cloud"
-      />
-      <h3>Word Cloud Untuk Sentimen Positif</h3>
-      <img
-        src="data:image/png;base64,{{ wordcloud_positive }}"
-        alt="Word Cloud"
-      />
-      <h3>Word Cloud Untuk Sentimen Negatif</h3>
-      <img
-        src="data:image/png;base64,{{ wordcloud_negative }}"
-        alt="Word Cloud"
-      />
+      <div class="chart">
+        <h3>Word Cloud Dari Keseluruhan Data / Isi File CSV</h3>
+        <img src="data:image/png;base64,{{ wordcloud }}" alt="Word Cloud" />
+        <a class="process-btn" href="{{ url_for('download_wordcloud_all') }}"
+          >Download WordCloud</a
+        >
+      </div>
+      <div class="chart">
+        <h3>Word Cloud Untuk Sentimen Netral</h3>
+        <img
+          src="data:image/png;base64,{{ wordcloud_neutral }}"
+          alt="Word Cloud"
+        />
+        <a
+          class="process-btn"
+          href="{{ url_for('download_wordcloud_netral') }}"
+        >
+          Download WordCloud Netral
+        </a>
+      </div>
+      <div class="chart">
+        <h3>Word Cloud Untuk Sentimen Positif</h3>
+        <img
+          src="data:image/png;base64,{{ wordcloud_positive }}"
+          alt="Word Cloud"
+        />
+        <a
+          class="process-btn"
+          href="{{ url_for('download_wordcloud_positif') }}"
+        >
+          Download WordCloud Positif
+        </a>
+      </div>
+      <div class="chart">
+        <h3>Word Cloud Untuk Sentimen Negatif</h3>
+        <img
+          src="data:image/png;base64,{{ wordcloud_negative }}"
+          alt="Word Cloud"
+        />
+        <a
+          class="process-btn"
+          href="{{ url_for('download_wordcloud_negatif') }}"
+        >
+          Download WordCloud Negatif
+        </a>
+      </div>
     </div>
   </div>
 </div>
