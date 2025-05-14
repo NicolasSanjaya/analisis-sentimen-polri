@@ -1,4 +1,13 @@
 {% extends "base.html" %} {% block content %}
+
+<!-- Spinner Loading -->
+<div id="loading-overlay" style="display: none">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Sedang memproses data...</p>
+  </div>
+</div>
+
 <div class="sidebar">
   <h1 class="sidebar-title">
     ANALISIS<br />SENTIMEN<br />INSTITUSI<br />POLRI
@@ -22,11 +31,9 @@
 
   <div class="content-text">
     <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eu molestie
-      mi. Nunc eu neque volutpat, efficitur nisi pulvinar, lobortis mi. Maecenas
-      laoreet augue mauris, et dapibus enim euismod ac. Nullam dignissim ipsum
-      ac libero consequat vestibulum. Mauris imperdiet tellus nec massa feugiat
-      sagittis. Vestibulum sagittis tellus risus, non condimentum.
+      Halaman ini menampilkan proses pengolahan data sentimen yang telah
+      diupload. Data yang telah diupload akan diproses untuk mendapatkan hasil
+      analisis sentimen.
     </p>
   </div>
 
